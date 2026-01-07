@@ -1,0 +1,5 @@
+nest new backendSistemaControleDeAcesso
+git remote add origin https://github.com/Lumegal/backendSistemaControleDeAcesso.git
+npm install --save @nestjs/typeorm typeorm pg
+npm i --save @nestjs/config
+nest g res empresa
