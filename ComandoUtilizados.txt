@@ -3,3 +3,10 @@ git remote add origin https://github.com/Lumegal/backendSistemaControleDeAcesso.
 npm install --save @nestjs/typeorm typeorm pg
 npm i --save @nestjs/config
 nest g res empresa
+npm i class-validator class-transformer
+nest g res usuario
+npm i @nestjs/jwt
+nest g module auth
+nest g service auth --no-spec
+nest g controller auth --no-spec
+npm i bcrypt
