@@ -15,5 +15,8 @@ export class Usuario {
   nome: string;
 
   @Column()
+  nivelDeAcesso: number;
+
+  @Column()
   ativo: boolean;
 }

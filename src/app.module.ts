@@ -7,6 +7,7 @@ import { join } from 'path';
 import { EmpresaModule } from './empresa/empresa.module';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AuthModule } from './auth/auth.module';
+import { CargasModule } from './cargas/cargas.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AuthModule } from './auth/auth.module';
     EmpresaModule,
     UsuarioModule,
     AuthModule,
+    CargasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -9,8 +9,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
+        // chave usada para assinar o token
         secret: configService.get<string>('JWT_SECRET'),
+        // cria o exp (quando o token vai expirar)
         signOptions: { expiresIn: '1d' },
+        // toda vez que jwtService.sign() for chamado iat e exp serao injetados automaticamente
       }),
     }),
   ],

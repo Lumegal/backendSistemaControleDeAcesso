@@ -10,6 +10,9 @@ export class CreateUsuarioDto {
   @IsNotEmpty({ message: 'Nome é obrigatório' })
   nome: string;
   
+  @IsNotEmpty({ message: 'Nível de acesso é obrigatório' })
+  nivelDeAcesso: number
+
   @IsNotEmpty({ message: 'ativo é obrigatório' })
   ativo: boolean;
 }

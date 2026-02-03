@@ -22,12 +22,13 @@ export class AuthService {
     return null;
   }
 
-  async login(usuario: { id: number; email: string; nome: string }) {
+  async login(usuario: { id: number; email: string; nome: string, nivelDeAcesso: number }) {
     // Geramos o token JWT
     const payload = {
       sub: usuario.id,
       email: usuario.email,
       nome: usuario.nome,
+      nivelDeAcesso: usuario.nivelDeAcesso
     };
     return {
       token: this.jwtService.sign(payload),
