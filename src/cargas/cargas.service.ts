@@ -4,16 +4,22 @@ import { UpdateCargasDto } from './dto/update-cargas.dto';
 import { Cargas } from './entities/cargas.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { MyGateway } from 'src/gateway/gateway';
 
 @Injectable()
 export class CargasService {
   constructor(
     @InjectRepository(Cargas)
     private readonly cargasRepository: Repository<Cargas>,
+    private readonly gateway: MyGateway,
   ) {}
 
   async create(createCargasDto: CreateCargasDto) {
-    return await this.cargasRepository.save(createCargasDto);
+    const cargaSalva = await this.cargasRepository.save(createCargasDto);
+
+    this.gateway.emitirCargaAtualizada(cargaSalva);
+
+    return cargaSalva;
   }
 
   async findAll() {
@@ -33,7 +39,11 @@ export class CargasService {
 
     Object.assign(cargas, updateCargasDto);
 
-    return await this.cargasRepository.save(cargas);
+    const cargaAtualizada = await this.cargasRepository.save(cargas);
+
+    this.gateway.emitirCargaAtualizada(cargaAtualizada);
+
+    return cargaAtualizada;
   }
 
   async remove(id: number) {

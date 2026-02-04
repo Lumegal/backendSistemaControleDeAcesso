@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-enum TipoOperacao {
+export enum TipoOperacao {
   CARREGAMENTO = 1,
   DESCARREGAMENTO = 2,
 }

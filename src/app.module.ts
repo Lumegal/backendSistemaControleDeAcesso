@@ -8,6 +8,7 @@ import { EmpresaModule } from './empresa/empresa.module';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AuthModule } from './auth/auth.module';
 import { CargasModule } from './cargas/cargas.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CargasModule } from './cargas/cargas.module';
     UsuarioModule,
     AuthModule,
     CargasModule,
+    GatewayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

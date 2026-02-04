@@ -1,9 +1,11 @@
 import {
   IsDateString,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { TipoOperacao } from '../entities/cargas.entity';
 
 export class CreateCargasDto {
   @IsNotEmpty({ message: 'Chegada é obrigatória' })
@@ -45,5 +47,8 @@ export class CreateCargasDto {
   @IsNotEmpty({
     message: 'Definir se é carregamento ou descarregamento é obrigatório',
   })
-  tipoOperacao: number;
+  @IsEnum(TipoOperacao, {
+    message: 'Tipo de operação deve ser Carregamento ou Descarregamento',
+  })
+  tipoOperacao: TipoOperacao;
 }
