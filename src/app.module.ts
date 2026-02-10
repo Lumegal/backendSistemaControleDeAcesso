@@ -9,6 +9,8 @@ import { UsuarioModule } from './usuario/usuario.module';
 import { AuthModule } from './auth/auth.module';
 import { CargasModule } from './cargas/cargas.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { MotoristaModule } from './motorista/motorista.module';
+import { PlacaModule } from './placa/placa.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { GatewayModule } from './gateway/gateway.module';
     AuthModule,
     CargasModule,
     GatewayModule,
+    MotoristaModule,
+    PlacaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

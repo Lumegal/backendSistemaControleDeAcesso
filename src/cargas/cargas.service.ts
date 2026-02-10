@@ -53,6 +53,10 @@ export class CargasService {
       throw new NotFoundException();
     }
 
-    return await this.cargasRepository.remove(cargas);
+    const cargaAtualizada = await this.cargasRepository.remove(cargas);
+
+    this.gateway.emitirCargaAtualizada(cargaAtualizada);
+
+    return cargaAtualizada;
   }
 }

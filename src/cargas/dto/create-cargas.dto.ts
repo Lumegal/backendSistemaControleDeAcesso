@@ -36,7 +36,7 @@ export class CreateCargasDto {
   @IsString()
   rgCpf: string;
 
-  @IsNotEmpty({ message: 'Celular é obrigatório' })
+  @IsOptional()
   @IsString()
   celular: string;
 

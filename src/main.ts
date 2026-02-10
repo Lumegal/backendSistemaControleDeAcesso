@@ -12,6 +12,7 @@ async function bootstrap() {
       stopAtFirstError: true, // retorna apenas o primeiro erro que ocorrer
     }),
   );
-  await app.listen(process.env.PORT ?? 3000);
+  console.log(process.env.PORT ?? 3001, '0.0.0.0');
+  await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
 }
 bootstrap();

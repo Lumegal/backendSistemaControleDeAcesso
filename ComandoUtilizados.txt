@@ -10,3 +10,5 @@ nest g module auth
 nest g service auth --no-spec
 nest g controller auth --no-spec
 npm i bcrypt
+nest g res motorista
+nest g res placa

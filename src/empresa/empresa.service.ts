@@ -13,7 +13,24 @@ export class EmpresaService {
   ) {}
 
   async create(createEmpresaDto: CreateEmpresaDto) {
-    const empresa = this.empresaRepository.create(createEmpresaDto);
+    const nomeNormalizado = createEmpresaDto.nome.trim().toLowerCase();
+
+    const empresaExistente = await this.empresaRepository.findOne({
+      where: {
+        nome: nomeNormalizado,
+      },
+    });
+
+    if (empresaExistente) {
+      // já existe → não salva nada
+      return empresaExistente;
+      // ou return null; se preferir
+    }
+
+    const empresa = this.empresaRepository.create({
+      ...createEmpresaDto,
+      nome: nomeNormalizado,
+    });
 
     return await this.empresaRepository.save(empresa);
   }

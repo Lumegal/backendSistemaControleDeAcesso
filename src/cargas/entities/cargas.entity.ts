@@ -31,7 +31,7 @@ export class Cargas {
   @Column()
   rgCpf: string;
 
-  @Column()
+  @Column({ nullable: true })
   celular: string;
 
   @Column({ nullable: true })
