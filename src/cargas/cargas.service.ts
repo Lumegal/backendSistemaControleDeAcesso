@@ -1,18 +1,164 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCargasDto } from './dto/create-cargas.dto';
 import { UpdateCargasDto } from './dto/update-cargas.dto';
-import { Cargas } from './entities/cargas.entity';
+import { Cargas, TipoOperacao } from './entities/cargas.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MyGateway } from 'src/gateway/gateway';
+import { parse } from 'csv-parse/sync';
+import { Motorista } from 'src/motorista/entities/motorista.entity';
+import { Placa } from 'src/placa/entities/placa.entity';
+import { Empresa } from 'src/empresa/entities/empresa.entity';
 
 @Injectable()
 export class CargasService {
   constructor(
     @InjectRepository(Cargas)
     private readonly cargasRepository: Repository<Cargas>,
+
+    @InjectRepository(Empresa)
+    private readonly empresaRepository: Repository<Empresa>,
+
+    @InjectRepository(Motorista)
+    private readonly motoristaRepository: Repository<Motorista>,
+
+    @InjectRepository(Placa)
+    private readonly placaRepository: Repository<Placa>,
+
     private readonly gateway: MyGateway,
   ) {}
+
+  private parseTipoOperacao(valor: string): TipoOperacao {
+    const v = valor.toLowerCase().trim();
+
+    if (v.includes('carreg')) return TipoOperacao.CARREGAMENTO;
+    if (v.includes('descar')) return TipoOperacao.DESCARREGAMENTO;
+
+    return TipoOperacao.CARREGAMENTO;
+  }
+
+  private parseDataHora(data?: string, hora?: string): Date | null {
+    if (!data || !hora) return null;
+
+    const dataTrim = data.trim();
+    const horaTrim = hora.trim();
+
+    if (!dataTrim || !horaTrim) return null;
+
+    const partesData = dataTrim.split('/');
+    if (partesData.length !== 3) return null;
+
+    const [dia, mes, ano] = partesData;
+
+    const iso = `${ano}-${mes}-${dia}T${horaTrim}:00`;
+    const date = new Date(iso);
+
+    if (isNaN(date.getTime())) return null;
+
+    return date;
+  }
+
+  async importCsv(buffer: Buffer) {
+    const content = buffer.toString('utf-8');
+
+    const records = parse(content, {
+      columns: true,
+      skip_empty_lines: true,
+      delimiter: ';',
+      from_line: 2,
+    });
+
+    const cargas: Cargas[] = [];
+    let linhaAtual = 2;
+
+    console.log('Início da importação do CSV');
+
+    for (const row of records as Record<string, string>[]) {
+      try {
+        const chegada = this.parseDataHora(row['DATA'], row['CHEGADA']);
+        if (!chegada) continue;
+
+        const entrada = this.parseDataHora(row['DATA'], row['ENTRADA']);
+        const saida = this.parseDataHora(row['DATA'], row['SAÍDA']);
+
+        const tipoOperacao = this.parseTipoOperacao(
+          row['CARREGAMENTO/\nDESCARREGAMENTO'],
+        );
+
+        const nomeEmpresa = row['EMPRESA']?.trim();
+        const nomeMotorista = row['NOME']?.trim();
+        const rgCpf = row['RG']?.trim();
+        const celular = row['CELULAR']?.trim();
+        const placaValor = row['PLACA']?.toUpperCase().trim();
+
+        // ===== EMPRESA =====
+        const existeEmpresa = await this.empresaRepository.findOne({
+          where: { nome: nomeEmpresa },
+        });
+
+        if (!existeEmpresa) {
+          const empresa = this.empresaRepository.create({ nome: nomeEmpresa });
+          await this.empresaRepository.save(empresa);
+        }
+
+        // ===== MOTORISTA =====
+        const existeMotorista = await this.motoristaRepository.findOne({
+          where: { rgCpf },
+        });
+
+        if (!existeMotorista) {
+          const motorista = this.motoristaRepository.create({
+            nome: nomeMotorista,
+            rgCpf,
+            celular,
+          });
+          await this.motoristaRepository.save(motorista);
+        }
+
+        // ===== PLACA =====
+        const existePlaca = await this.placaRepository.findOne({
+          where: { placa: placaValor },
+        });
+
+        if (!existePlaca) {
+          const placa = this.placaRepository.create({ placa: placaValor });
+          await this.placaRepository.save(placa);
+        }
+
+        // ===== CARGA =====
+        const carga = this.cargasRepository.create({
+          chegada,
+          entrada,
+          saida,
+          empresa: nomeEmpresa,
+          placa: placaValor,
+          motorista: nomeMotorista,
+          rgCpf,
+          celular,
+          numeroNotaFiscal: row['Nº DA NOTA FISCAL']?.trim(),
+          tipoOperacao,
+        } as Partial<Cargas>);
+
+        try {
+          await this.cargasRepository.save(carga);
+        } catch (err) {
+          linhaAtual++;
+          console.warn(
+            `Linha ${linhaAtual}: erro ao salvar carga (provável duplicado), ignorando.`,
+          );
+          continue; // pula para a próxima linha
+        }
+      } catch (err) {
+        console.error(`Linha ${linhaAtual}: erro inesperado:`, err);
+        // você pode decidir continuar ou parar, aqui vamos continuar
+        continue;
+      }
+
+      linhaAtual++;
+    }
+
+    console.log('Fim da importação do CSV');
+  }
 
   async create(createCargasDto: CreateCargasDto) {
     const cargaSalva = await this.cargasRepository.save(createCargasDto);

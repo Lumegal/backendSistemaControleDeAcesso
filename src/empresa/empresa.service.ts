@@ -43,6 +43,12 @@ export class EmpresaService {
     return await this.empresaRepository.findOne({ where: { id } });
   }
 
+  async findOneByNome(nome: string) {
+    return await this.empresaRepository.findOne({
+      where: { nome },
+    });
+  }
+
   async update(id: number, updateEmpresaDto: UpdateEmpresaDto) {
     const empresa = await this.findOne(id);
 

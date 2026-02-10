@@ -22,6 +22,11 @@ export class MotoristaController {
     return this.motoristaService.findOne(+id);
   }
 
+  @Get(':rgCpf')
+  findOneByRgCpf(@Param('rgCpf') rgCpf: string) {
+    return this.motoristaService.findOneByRgCpf(rgCpf);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMotoristaDto: UpdateMotoristaDto) {
     return this.motoristaService.update(+id, updateMotoristaDto);

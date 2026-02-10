@@ -21,8 +21,14 @@ export class PlacaService {
     return await this.placaRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} placa`;
+  async findOne(id: number) {
+    return await this.placaRepository.findOne({ where: { id } });
+  }
+
+  async findOneByPlaca(placa: string) {
+    return await this.placaRepository.findOne({
+      where: { placa },
+    });
   }
 
   update(id: number, updatePlacaDto: UpdatePlacaDto) {

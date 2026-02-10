@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PlacaService } from './placa.service';
 import { CreatePlacaDto } from './dto/create-placa.dto';
 import { UpdatePlacaDto } from './dto/update-placa.dto';
@@ -20,6 +28,11 @@ export class PlacaController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.placaService.findOne(+id);
+  }
+
+  @Get(':placa')
+  findOneByPlaca(@Param('placa') placa: string) {
+    return this.placaService.findOneByPlaca(placa);
   }
 
   @Patch(':id')

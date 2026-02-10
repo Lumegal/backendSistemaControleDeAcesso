@@ -1,7 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { CargasService } from './cargas.service';
 import { CreateCargasDto } from './dto/create-cargas.dto';
 import { UpdateCargasDto } from './dto/update-cargas.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('cargas')
 export class CargasController {
@@ -10,6 +21,16 @@ export class CargasController {
   @Post()
   create(@Body() createCargasDto: CreateCargasDto) {
     return this.cargasService.create(createCargasDto);
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  async importCsv(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new Error('Arquivo não enviado');
+    }
+
+    return await this.cargasService.importCsv(file.buffer);
   }
 
   @Get()

@@ -21,8 +21,14 @@ export class MotoristaService {
     return await this.motoristaRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} motorista`;
+  async findOne(id: number) {
+    return await this.motoristaRepository.findOne({ where: { id } });
+  }
+
+  async findOneByRgCpf(rgCpf: string) {
+    return await this.motoristaRepository.findOne({
+      where: { rgCpf },
+    });
   }
 
   update(id: number, updateMotoristaDto: UpdateMotoristaDto) {

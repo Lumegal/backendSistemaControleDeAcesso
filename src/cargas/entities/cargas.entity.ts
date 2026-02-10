@@ -1,10 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum TipoOperacao {
   CARREGAMENTO = 1,
   DESCARREGAMENTO = 2,
 }
 
+@Index(['chegada', 'empresa', 'motorista'], { unique: true })
 @Entity()
 export class Cargas {
   @PrimaryGeneratedColumn()
