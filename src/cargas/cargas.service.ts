@@ -28,13 +28,13 @@ export class CargasService {
     private readonly gateway: MyGateway,
   ) {}
 
-  private parseTipoOperacao(valor: string): TipoOperacao {
-    const v = valor.toLowerCase().trim();
+  private parseTipoOperacao(valor: string) {
+    const v = valor.toLowerCase().replace(/\s+/g, ''); // remove espaços e quebras de linha
 
-    if (v.includes('carreg')) return TipoOperacao.CARREGAMENTO;
-    if (v.includes('descar')) return TipoOperacao.DESCARREGAMENTO;
+    console.log('Carregamento?: ', v == 'carregamento');
 
-    return TipoOperacao.CARREGAMENTO;
+    if (v == 'carregamento') return TipoOperacao.CARREGAMENTO;
+    if (v == 'descarregamento') return TipoOperacao.DESCARREGAMENTO;
   }
 
   private parseDataHora(data?: string, hora?: string): Date | null {
@@ -58,6 +58,20 @@ export class CargasService {
     return date;
   }
 
+  private formatarPlaca(valor?: string) {
+    if (!valor) return '';
+
+    // remove espaços, traços etc e deixa maiúsculo
+    const limpa = valor.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+    if (limpa.length < 7) return limpa; // evita erro se vier incompleta
+
+    const letras = limpa.slice(0, 3);
+    const numeros = limpa.slice(3, 7);
+
+    return `${letras}-${numeros}`;
+  }
+
   async importCsv(buffer: Buffer) {
     const content = buffer.toString('utf-8');
 
@@ -68,7 +82,6 @@ export class CargasService {
       from_line: 2,
     });
 
-    const cargas: Cargas[] = [];
     let linhaAtual = 2;
 
     console.log('Início da importação do CSV');
@@ -82,14 +95,14 @@ export class CargasService {
         const saida = this.parseDataHora(row['DATA'], row['SAÍDA']);
 
         const tipoOperacao = this.parseTipoOperacao(
-          row['CARREGAMENTO/\nDESCARREGAMENTO'],
+          row['CARREGAMENTO/DESCARREGAMENTO'],
         );
 
-        const nomeEmpresa = row['EMPRESA']?.trim();
-        const nomeMotorista = row['NOME']?.trim();
-        const rgCpf = row['RG']?.trim();
+        const nomeEmpresa = row['EMPRESA']?.trim().toUpperCase();
+        const nomeMotorista = row['NOME']?.trim().toUpperCase();
+        const rgCpf = row['RG']?.trim().toUpperCase();
         const celular = row['CELULAR']?.trim();
-        const placaValor = row['PLACA']?.toUpperCase().trim();
+        const placaValor = this.formatarPlaca(row['PLACA']);
 
         // ===== EMPRESA =====
         const existeEmpresa = await this.empresaRepository.findOne({
