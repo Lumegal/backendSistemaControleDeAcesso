@@ -31,7 +31,7 @@ export class CargasService {
   private parseTipoOperacao(valor: string) {
     const v = valor.toLowerCase().replace(/\s+/g, ''); // remove espaços e quebras de linha
 
-    console.log('Carregamento?: ', v == 'carregamento');
+    // console.log('Carregamento?: ', v == 'carregamento');
 
     if (v == 'carregamento') return TipoOperacao.CARREGAMENTO;
     if (v == 'descarregamento') return TipoOperacao.DESCARREGAMENTO;
@@ -79,7 +79,8 @@ export class CargasService {
       columns: true,
       skip_empty_lines: true,
       delimiter: ';',
-      from_line: 2,
+      bom: true,
+      trim: true,
     });
 
     let linhaAtual = 2;
@@ -152,6 +153,8 @@ export class CargasService {
           tipoOperacao,
         } as Partial<Cargas>);
 
+        // console.log(carga);
+
         try {
           await this.cargasRepository.save(carga);
         } catch (err) {
@@ -159,6 +162,8 @@ export class CargasService {
           console.warn(
             `Linha ${linhaAtual}: erro ao salvar carga (provável duplicado), ignorando.`,
           );
+          console.warn(err.message);
+          console.warn('Erro banco:', err.detail);
           continue; // pula para a próxima linha
         }
       } catch (err) {
@@ -169,6 +174,8 @@ export class CargasService {
 
       linhaAtual++;
     }
+
+    this.gateway.emitirCargaAtualizada();
 
     console.log('Fim da importação do CSV');
   }

@@ -5,7 +5,7 @@ export enum TipoOperacao {
   DESCARREGAMENTO = 2,
 }
 
-@Index(['chegada', 'empresa', 'motorista'], { unique: true })
+@Index(['chegada', 'empresa', 'motorista', 'tipoOperacao'], { unique: true })
 @Entity()
 export class Cargas {
   @PrimaryGeneratedColumn()

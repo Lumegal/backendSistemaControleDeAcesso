@@ -25,7 +25,7 @@ export class MyGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-  emitirCargaAtualizada(carga: Cargas) {
+  emitirCargaAtualizada(carga?: Cargas) {
     this.server.emit('cargaAtualizada', carga);
   }
 }
