@@ -155,16 +155,30 @@ export class CargasService {
 
         // console.log(carga);
 
-        try {
-          await this.cargasRepository.save(carga);
-        } catch (err) {
-          linhaAtual++;
+        const jaExisteCarga = await this.cargasRepository.findOne({
+          where: {
+            chegada,
+            empresa: nomeEmpresa,
+            motorista: nomeMotorista,
+          },
+        });
+
+        if (jaExisteCarga) {
           console.warn(
-            `Linha ${linhaAtual}: erro ao salvar carga (provável duplicado), ignorando.`,
+            `Linha ${linhaAtual}: duplicado detectado antes do insert`,
           );
-          console.warn(err.message);
-          console.warn('Erro banco:', err.detail);
-          continue; // pula para a próxima linha
+        } else {
+          try {
+            await this.cargasRepository.save(carga);
+            console.log(`Carga na linha ${linhaAtual} Salva.`);
+          } catch (err: any) {
+            console.warn(
+              `Linha ${linhaAtual}: erro ao salvar carga, ignorando.`,
+            );
+            console.warn(err.message);
+            console.warn('Erro banco:', err.detail);
+            continue;
+          }
         }
       } catch (err) {
         console.error(`Linha ${linhaAtual}: erro inesperado:`, err);
