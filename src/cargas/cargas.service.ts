@@ -72,6 +72,16 @@ export class CargasService {
     return `${letras}-${numeros}`;
   }
 
+  private formatarCelular(valor: string) {
+    if (!valor) return '';
+
+    const numeros = valor.replace('-', '');
+    const ddd = numeros.slice(0, 2);
+    const parte1 = numeros.slice(2, 7);
+    const parte2 = numeros.slice(7);
+    return `(${ddd}) ${parte1}-${parte2}`;
+  }
+
   async importCsv(buffer: Buffer) {
     const content = buffer.toString('utf-8');
 
@@ -102,7 +112,7 @@ export class CargasService {
         const nomeEmpresa = row['EMPRESA']?.trim().toUpperCase();
         const nomeMotorista = row['NOME']?.trim().toUpperCase();
         const rgCpf = row['RG']?.trim().toUpperCase();
-        const celular = row['CELULAR']?.trim();
+        const celular = this.formatarCelular(row['CELULAR']?.trim());
         const placaValor = this.formatarPlaca(row['PLACA']);
 
         // ===== EMPRESA =====
