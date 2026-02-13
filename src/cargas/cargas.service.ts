@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCargasDto } from './dto/create-cargas.dto';
 import { UpdateCargasDto } from './dto/update-cargas.dto';
 import { Cargas, TipoOperacao } from './entities/cargas.entity';
@@ -205,11 +209,22 @@ export class CargasService {
   }
 
   async create(createCargasDto: CreateCargasDto) {
-    const cargaSalva = await this.cargasRepository.save(createCargasDto);
+    try {
+      const cargaSalva = await this.cargasRepository.save(createCargasDto);
 
-    this.gateway.emitirCargaAtualizada(cargaSalva);
+      this.gateway.emitirCargaAtualizada(cargaSalva);
 
-    return cargaSalva;
+      return cargaSalva;
+    } catch (error: any) {
+      // 23505 = unique violation no Postgres
+      if (error.code === '23505') {
+        throw new BadRequestException(
+          'Já existe um carregamento com esses dados',
+        );
+      }
+
+      throw error; // outros erros continuam normais
+    }
   }
 
   async findAll() {
