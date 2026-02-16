@@ -30,7 +30,7 @@ export class PlacaController {
     return this.placaService.findOne(+id);
   }
 
-  @Get(':placa')
+  @Get('buscaPlaca/:placa')
   findOneByPlaca(@Param('placa') placa: string) {
     return this.placaService.findOneByPlaca(placa);
   }

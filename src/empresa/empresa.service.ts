@@ -13,11 +13,9 @@ export class EmpresaService {
   ) {}
 
   async create(createEmpresaDto: CreateEmpresaDto) {
-    const nomeNormalizado = createEmpresaDto.nome.trim().toLowerCase();
-
     const empresaExistente = await this.empresaRepository.findOne({
       where: {
-        nome: nomeNormalizado,
+        nome: createEmpresaDto.nome,
       },
     });
 
@@ -27,10 +25,7 @@ export class EmpresaService {
       // ou return null; se preferir
     }
 
-    const empresa = this.empresaRepository.create({
-      ...createEmpresaDto,
-      nome: nomeNormalizado,
-    });
+    const empresa = this.empresaRepository.create(createEmpresaDto);
 
     return await this.empresaRepository.save(empresa);
   }
@@ -44,9 +39,13 @@ export class EmpresaService {
   }
 
   async findOneByNome(nome: string) {
-    return await this.empresaRepository.findOne({
+    const empresa = await this.empresaRepository.findOne({
       where: { nome },
     });
+
+    if (!empresa) return null;
+
+    return empresa;
   }
 
   async update(id: number, updateEmpresaDto: UpdateEmpresaDto) {

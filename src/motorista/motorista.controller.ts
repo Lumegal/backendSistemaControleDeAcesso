@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { MotoristaService } from './motorista.service';
 import { CreateMotoristaDto } from './dto/create-motorista.dto';
 import { UpdateMotoristaDto } from './dto/update-motorista.dto';
@@ -22,13 +30,16 @@ export class MotoristaController {
     return this.motoristaService.findOne(+id);
   }
 
-  @Get(':rgCpf')
+  @Get('buscaRgCpf/:rgCpf')
   findOneByRgCpf(@Param('rgCpf') rgCpf: string) {
     return this.motoristaService.findOneByRgCpf(rgCpf);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMotoristaDto: UpdateMotoristaDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateMotoristaDto: UpdateMotoristaDto,
+  ) {
     return this.motoristaService.update(+id, updateMotoristaDto);
   }
 

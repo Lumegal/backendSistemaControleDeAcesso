@@ -30,7 +30,7 @@ export class EmpresaController {
     return this.empresaService.findOne(+id);
   }
 
-  @Get(':nome')
+  @Get('buscaNome/:nome')
   findOneByNome(@Param('nome') nome: string) {
     return this.empresaService.findOneByNome(nome);
   }
