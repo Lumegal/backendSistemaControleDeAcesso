@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Motorista } from '../../motorista/entities/motorista.entity';
 import { Empresa } from 'src/empresa/entities/empresa.entity';
+import { Placa } from 'src/placa/entities/placa.entity';
 
 export enum TipoOperacao {
   CARREGAMENTO = 1,
@@ -35,8 +36,11 @@ export class Cargas {
   @JoinColumn({ name: 'empresaId' })
   empresa: Empresa;
 
-  @Column()
-  placa: string;
+  @ManyToOne(() => Placa, (placa) => placa.cargas, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'placaId' })
+  placa: Placa;
 
   @Column({ nullable: true })
   numeroNotaFiscal: string;

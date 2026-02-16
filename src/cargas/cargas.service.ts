@@ -144,13 +144,14 @@ export class CargasService {
         }
 
         // ===== PLACA =====
-        const existePlaca = await this.placaRepository.findOne({
+        let placa = await this.placaRepository.findOne({
           where: { placa: placaValor },
         });
 
-        if (!existePlaca) {
-          const placa = this.placaRepository.create({ placa: placaValor });
-          await this.placaRepository.save(placa);
+        if (!placa) {
+          placa = await this.placaRepository.save(
+            this.placaRepository.create({ placa: placaValor }),
+          );
         }
 
         // ===== CARGA =====
@@ -159,7 +160,7 @@ export class CargasService {
           entrada: entrada ?? undefined,
           saida: saida ?? undefined,
           empresa,
-          placa: placaValor,
+          placa,
           motorista,
           numeroNotaFiscal: row['Nº DA NOTA FISCAL']?.trim() || undefined,
           tipoOperacao,
@@ -225,10 +226,19 @@ export class CargasService {
         throw new BadRequestException('Empresa não encontrada');
       }
 
+      const placa = await this.placaRepository.findOne({
+        where: { id: createCargasDto.placaId },
+      });
+
+      if (!placa) {
+        throw new BadRequestException('Placa não encontrada');
+      }
+
       const carga = this.cargasRepository.create({
         ...createCargasDto,
         empresa,
         motorista,
+        placa,
       });
 
       const cargaSalva = await this.cargasRepository.save(carga);

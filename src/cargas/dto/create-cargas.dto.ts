@@ -26,8 +26,8 @@ export class CreateCargasDto {
   empresaId: number;
 
   @IsNotEmpty({ message: 'Placa é obrigatória' })
-  @IsString()
-  placa: string;
+  @IsInt()
+  placaId: number;
 
   @IsNotEmpty({ message: 'Motorista é obrigatório' })
   @IsInt()
