@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsInt,
 } from 'class-validator';
 import { TipoOperacao } from '../entities/cargas.entity';
 
@@ -29,16 +30,8 @@ export class CreateCargasDto {
   placa: string;
 
   @IsNotEmpty({ message: 'Motorista é obrigatório' })
-  @IsString()
-  motorista: string;
-
-  @IsNotEmpty({ message: 'RG ou CPF é obrigatório' })
-  @IsString()
-  rgCpf: string;
-
-  @IsOptional()
-  @IsString()
-  celular: string;
+  @IsInt()
+  motoristaId: number;
 
   @IsOptional()
   @IsString()

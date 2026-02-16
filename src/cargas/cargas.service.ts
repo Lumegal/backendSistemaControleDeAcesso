@@ -153,6 +153,14 @@ export class CargasService {
           await this.placaRepository.save(placa);
         }
 
+        const motorista = await this.motoristaRepository.findOne({
+          where: { rgCpf },
+        });
+
+        if (!motorista) {
+          throw new BadRequestException('Motorista não encontrado');
+        }
+
         // ===== CARGA =====
         const carga = this.cargasRepository.create({
           chegada,
@@ -160,9 +168,7 @@ export class CargasService {
           saida,
           empresa: nomeEmpresa,
           placa: placaValor,
-          motorista: nomeMotorista,
-          rgCpf,
-          celular,
+          motorista,
           numeroNotaFiscal: row['Nº DA NOTA FISCAL']?.trim(),
           tipoOperacao,
         } as Partial<Cargas>);
@@ -173,7 +179,8 @@ export class CargasService {
           where: {
             chegada,
             empresa: nomeEmpresa,
-            motorista: nomeMotorista,
+            motorista,
+            tipoOperacao,
           },
         });
 
@@ -210,20 +217,32 @@ export class CargasService {
 
   async create(createCargasDto: CreateCargasDto) {
     try {
-      const cargaSalva = await this.cargasRepository.save(createCargasDto);
+      const motorista = await this.motoristaRepository.findOne({
+        where: { id: createCargasDto.motoristaId },
+      });
+
+      if (!motorista) {
+        throw new BadRequestException('Motorista não encontrado');
+      }
+
+      const carga = this.cargasRepository.create({
+        ...createCargasDto,
+        motorista,
+      });
+
+      const cargaSalva = await this.cargasRepository.save(carga);
 
       this.gateway.emitirCargaAtualizada(cargaSalva);
 
       return cargaSalva;
     } catch (error: any) {
-      // 23505 = unique violation no Postgres
       if (error.code === '23505') {
         throw new BadRequestException(
           'Já existe um carregamento com esses dados',
         );
       }
 
-      throw error; // outros erros continuam normais
+      throw error;
     }
   }
 

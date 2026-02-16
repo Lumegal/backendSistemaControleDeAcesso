@@ -1,11 +1,19 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Motorista } from '../../motorista/entities/motorista.entity';
 
 export enum TipoOperacao {
   CARREGAMENTO = 1,
   DESCARREGAMENTO = 2,
 }
 
-@Index(['chegada', 'empresa', 'motorista', 'tipoOperacao'], { unique: true })
+@Index(['chegada', 'empresa', 'tipoOperacao'], { unique: true })
 @Entity()
 export class Cargas {
   @PrimaryGeneratedColumn()
@@ -26,18 +34,15 @@ export class Cargas {
   @Column()
   placa: string;
 
-  @Column()
-  motorista: string;
-
-  @Column()
-  rgCpf: string;
-
-  @Column({ nullable: true })
-  celular: string;
-
   @Column({ nullable: true })
   numeroNotaFiscal: string;
 
   @Column({ type: 'int' })
   tipoOperacao: TipoOperacao;
+
+  @ManyToOne(() => Motorista, (motorista) => motorista.cargas, {
+    eager: true, // já traz o motorista junto
+  })
+  @JoinColumn({ name: 'motoristaId' })
+  motorista: Motorista;
 }
