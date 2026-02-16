@@ -7,13 +7,14 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Motorista } from '../../motorista/entities/motorista.entity';
+import { Empresa } from 'src/empresa/entities/empresa.entity';
 
 export enum TipoOperacao {
   CARREGAMENTO = 1,
   DESCARREGAMENTO = 2,
 }
 
-@Index(['chegada', 'empresa', 'tipoOperacao'], { unique: true })
+@Index(['chegada', 'empresa', 'motorista', 'tipoOperacao'], { unique: true })
 @Entity()
 export class Cargas {
   @PrimaryGeneratedColumn()
@@ -28,8 +29,11 @@ export class Cargas {
   @Column({ type: 'timestamp', nullable: true })
   saida: Date;
 
-  @Column()
-  empresa: string;
+  @ManyToOne(() => Empresa, (empresa) => empresa.cargas, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'empresaId' })
+  empresa: Empresa;
 
   @Column()
   placa: string;

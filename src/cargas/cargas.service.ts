@@ -120,27 +120,27 @@ export class CargasService {
         const placaValor = this.formatarPlaca(row['PLACA']);
 
         // ===== EMPRESA =====
-        const existeEmpresa = await this.empresaRepository.findOne({
+        let empresa = await this.empresaRepository.findOne({
           where: { nome: nomeEmpresa },
         });
 
-        if (!existeEmpresa) {
-          const empresa = this.empresaRepository.create({ nome: nomeEmpresa });
-          await this.empresaRepository.save(empresa);
+        if (!empresa) {
+          empresa = this.empresaRepository.create({ nome: nomeEmpresa });
+          empresa = await this.empresaRepository.save(empresa);
         }
 
         // ===== MOTORISTA =====
-        const existeMotorista = await this.motoristaRepository.findOne({
+        let motorista = await this.motoristaRepository.findOne({
           where: { rgCpf },
         });
 
-        if (!existeMotorista) {
-          const motorista = this.motoristaRepository.create({
+        if (!motorista) {
+          motorista = this.motoristaRepository.create({
             nome: nomeMotorista,
             rgCpf,
             celular,
           });
-          await this.motoristaRepository.save(motorista);
+          motorista = await this.motoristaRepository.save(motorista);
         }
 
         // ===== PLACA =====
@@ -153,32 +153,24 @@ export class CargasService {
           await this.placaRepository.save(placa);
         }
 
-        const motorista = await this.motoristaRepository.findOne({
-          where: { rgCpf },
-        });
-
-        if (!motorista) {
-          throw new BadRequestException('Motorista não encontrado');
-        }
-
         // ===== CARGA =====
         const carga = this.cargasRepository.create({
           chegada,
-          entrada,
-          saida,
-          empresa: nomeEmpresa,
+          entrada: entrada ?? undefined,
+          saida: saida ?? undefined,
+          empresa,
           placa: placaValor,
           motorista,
-          numeroNotaFiscal: row['Nº DA NOTA FISCAL']?.trim(),
+          numeroNotaFiscal: row['Nº DA NOTA FISCAL']?.trim() || undefined,
           tipoOperacao,
-        } as Partial<Cargas>);
+        });
 
         // console.log(carga);
 
         const jaExisteCarga = await this.cargasRepository.findOne({
           where: {
             chegada,
-            empresa: nomeEmpresa,
+            empresa,
             motorista,
             tipoOperacao,
           },
@@ -225,8 +217,17 @@ export class CargasService {
         throw new BadRequestException('Motorista não encontrado');
       }
 
+      const empresa = await this.empresaRepository.findOne({
+        where: { id: createCargasDto.empresaId },
+      });
+
+      if (!empresa) {
+        throw new BadRequestException('Empresa não encontrada');
+      }
+
       const carga = this.cargasRepository.create({
         ...createCargasDto,
+        empresa,
         motorista,
       });
 

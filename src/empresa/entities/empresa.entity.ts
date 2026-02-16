@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Cargas } from '../../cargas/entities/cargas.entity';
 
 @Entity()
 export class Empresa {
@@ -10,4 +11,7 @@ export class Empresa {
 
   @Column({ type: 'boolean', default: true })
   ativo: boolean;
+
+  @OneToMany(() => Cargas, (carga) => carga.empresa)
+  cargas: Cargas[];
 }
