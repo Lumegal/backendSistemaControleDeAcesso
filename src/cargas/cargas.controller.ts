@@ -61,7 +61,6 @@ export class CargasController {
     return this.cargasService.filtrar(
       body.filtros,
       body.campos,
-      body.tipoExport,
     );
   }
 }

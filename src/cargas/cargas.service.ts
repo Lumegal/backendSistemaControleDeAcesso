@@ -212,140 +212,8 @@ export class CargasService {
     console.log('Fim da importação do CSV');
   }
 
-  private readonly MAPA_CAMPOS = {
-    id: {
-      label: 'ID',
-      get: (c: Cargas) => c.id,
-    },
-    data: {
-      label: 'Data',
-      get: (c: Cargas) =>
-        c.chegada ? c.chegada.toLocaleDateString('pt-BR') : '',
-    },
-    horarios: {
-      label: 'Horários',
-      get: (c: Cargas) =>
-        `Chegada: ${c.chegada?.toLocaleTimeString('pt-BR') || ''} 
-Entrada: ${c.entrada?.toLocaleTimeString('pt-BR') || ''} 
-Saída: ${c.saida?.toLocaleTimeString('pt-BR') || ''}`,
-    },
-    empresa: {
-      label: 'Empresa',
-      get: (c: Cargas) => c.empresa?.nome || '',
-    },
-    placa: {
-      label: 'Placa',
-      get: (c: Cargas) => c.placa?.placa || '',
-    },
-    motorista: {
-      label: 'Motorista',
-      get: (c: Cargas) => c.motorista?.nome || '',
-    },
-    rgCpf: {
-      label: 'RG/CPF',
-      get: (c: Cargas) => c.motorista?.rgCpf || '',
-    },
-    celular: {
-      label: 'Celular',
-      get: (c: Cargas) => c.motorista?.celular || '',
-    },
-    numeroNotaFiscal: {
-      label: 'Nº NF',
-      get: (c: Cargas) => c.numeroNotaFiscal || 'S/NF',
-    },
-    tipoOperacao: {
-      label: 'Operação',
-      get: (c: Cargas) =>
-        c.tipoOperacao === TipoOperacao.CARREGAMENTO
-          ? 'Carregamento'
-          : 'Descarregamento',
-    },
-  };
-
-  private montarDadosExportacao(
-    cargas: Cargas[],
-    camposSelecionados: string[],
-  ) {
-    return cargas.map((carga) => {
-      const obj: Record<string, any> = {};
-
-      camposSelecionados.forEach((campoKey) => {
-        const config = this.MAPA_CAMPOS[campoKey];
-
-        if (config) {
-          obj[config.label] = config.get(carga);
-        }
-      });
-
-      return obj;
-    });
-  }
-
-  private gerarPDF(dados: any[], res: Response) {
-    const doc = new PDFDocument({ margin: 30 });
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=cargas.pdf');
-
-    doc.pipe(res);
-
-    if (dados.length === 0) {
-      doc.text('Nenhum dado encontrado.');
-      doc.end();
-      return;
-    }
-
-    const colunas = Object.keys(dados[0]);
-
-    // Cabeçalho
-    doc.fontSize(12).text(colunas.join(' | '));
-    doc.moveDown();
-
-    // Linhas
-    dados.forEach((linha) => {
-      const valores = colunas.map((c) => linha[c]);
-      doc.text(valores.join(' | '));
-    });
-
-    doc.end();
-  }
-
-  async gerarExcel(dados: any[], res: Response) {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Cargas');
-
-    if (!dados.length) {
-      worksheet.addRow(['Nenhum registro encontrado']);
-    } else {
-      // Cabeçalhos baseados nas chaves do objeto
-      const colunas = Object.keys(dados[0]);
-
-      worksheet.columns = colunas.map((col) => ({
-        header: col,
-        key: col,
-        width: 20,
-      }));
-
-      // Adiciona os dados
-      dados.forEach((linha) => {
-        worksheet.addRow(linha);
-      });
-    }
-
-    // Configurar headers para download
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
-
-    res.setHeader('Content-Disposition', 'attachment; filename=cargas.xlsx');
-
-    await workbook.xlsx.write(res);
-    res.end();
-  }
-
-  async filtrar(filtro: FiltroCargasDto, campos: string[], tipoExport: number) {
-    console.log(campos);
+  async filtrar(filtro: FiltroCargasDto, campos: string[]) {
+    // console.log(campos);
     const query = this.cargasRepository
       .createQueryBuilder('carga')
       .leftJoin('carga.motorista', 'motorista')
@@ -421,7 +289,7 @@ Saída: ${c.saida?.toLocaleTimeString('pt-BR') || ''}`,
       query.andWhere('carga.chegada BETWEEN :inicio AND :fim', { inicio, fim });
     }
 
-    console.log(query.getSql());
+    // console.log(query.getSql());
     return query.getRawMany();
   }
 
