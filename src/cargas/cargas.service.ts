@@ -13,6 +13,10 @@ import { parse } from 'csv-parse/sync';
 import { Motorista } from 'src/motorista/entities/motorista.entity';
 import { Placa } from 'src/placa/entities/placa.entity';
 import { Empresa } from 'src/empresa/entities/empresa.entity';
+import * as ExcelJS from 'exceljs';
+import * as PDFDocument from 'pdfkit';
+import { Response } from 'express';
+import { FiltroCargasDto } from './dto/filtro-cargas.dto';
 
 @Injectable()
 export class CargasService {
@@ -206,6 +210,219 @@ export class CargasService {
     this.gateway.emitirCargaAtualizada();
 
     console.log('Fim da importação do CSV');
+  }
+
+  private readonly MAPA_CAMPOS = {
+    id: {
+      label: 'ID',
+      get: (c: Cargas) => c.id,
+    },
+    data: {
+      label: 'Data',
+      get: (c: Cargas) =>
+        c.chegada ? c.chegada.toLocaleDateString('pt-BR') : '',
+    },
+    horarios: {
+      label: 'Horários',
+      get: (c: Cargas) =>
+        `Chegada: ${c.chegada?.toLocaleTimeString('pt-BR') || ''} 
+Entrada: ${c.entrada?.toLocaleTimeString('pt-BR') || ''} 
+Saída: ${c.saida?.toLocaleTimeString('pt-BR') || ''}`,
+    },
+    empresa: {
+      label: 'Empresa',
+      get: (c: Cargas) => c.empresa?.nome || '',
+    },
+    placa: {
+      label: 'Placa',
+      get: (c: Cargas) => c.placa?.placa || '',
+    },
+    motorista: {
+      label: 'Motorista',
+      get: (c: Cargas) => c.motorista?.nome || '',
+    },
+    rgCpf: {
+      label: 'RG/CPF',
+      get: (c: Cargas) => c.motorista?.rgCpf || '',
+    },
+    celular: {
+      label: 'Celular',
+      get: (c: Cargas) => c.motorista?.celular || '',
+    },
+    numeroNotaFiscal: {
+      label: 'Nº NF',
+      get: (c: Cargas) => c.numeroNotaFiscal || 'S/NF',
+    },
+    tipoOperacao: {
+      label: 'Operação',
+      get: (c: Cargas) =>
+        c.tipoOperacao === TipoOperacao.CARREGAMENTO
+          ? 'Carregamento'
+          : 'Descarregamento',
+    },
+  };
+
+  private montarDadosExportacao(
+    cargas: Cargas[],
+    camposSelecionados: string[],
+  ) {
+    return cargas.map((carga) => {
+      const obj: Record<string, any> = {};
+
+      camposSelecionados.forEach((campoKey) => {
+        const config = this.MAPA_CAMPOS[campoKey];
+
+        if (config) {
+          obj[config.label] = config.get(carga);
+        }
+      });
+
+      return obj;
+    });
+  }
+
+  private gerarPDF(dados: any[], res: Response) {
+    const doc = new PDFDocument({ margin: 30 });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=cargas.pdf');
+
+    doc.pipe(res);
+
+    if (dados.length === 0) {
+      doc.text('Nenhum dado encontrado.');
+      doc.end();
+      return;
+    }
+
+    const colunas = Object.keys(dados[0]);
+
+    // Cabeçalho
+    doc.fontSize(12).text(colunas.join(' | '));
+    doc.moveDown();
+
+    // Linhas
+    dados.forEach((linha) => {
+      const valores = colunas.map((c) => linha[c]);
+      doc.text(valores.join(' | '));
+    });
+
+    doc.end();
+  }
+
+  async gerarExcel(dados: any[], res: Response) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Cargas');
+
+    if (!dados.length) {
+      worksheet.addRow(['Nenhum registro encontrado']);
+    } else {
+      // Cabeçalhos baseados nas chaves do objeto
+      const colunas = Object.keys(dados[0]);
+
+      worksheet.columns = colunas.map((col) => ({
+        header: col,
+        key: col,
+        width: 20,
+      }));
+
+      // Adiciona os dados
+      dados.forEach((linha) => {
+        worksheet.addRow(linha);
+      });
+    }
+
+    // Configurar headers para download
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+
+    res.setHeader('Content-Disposition', 'attachment; filename=cargas.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+  }
+
+  async filtrar(filtro: FiltroCargasDto, campos: string[], tipoExport: number) {
+    console.log(campos);
+    const query = this.cargasRepository
+      .createQueryBuilder('carga')
+      .leftJoin('carga.motorista', 'motorista')
+      .leftJoin('carga.empresa', 'empresa')
+      .leftJoin('carga.placa', 'placa');
+
+    const camposPermitidos: Record<string, string> = {
+      id: 'carga.id',
+      chegada: 'carga.chegada',
+      entrada: 'carga.entrada',
+      saida: 'carga.saida',
+      empresa: 'empresa.nome',
+      placa: 'carga.placaId',
+      motorista: 'motorista.nome',
+      rgCpf: 'motorista.rgCpf',
+      numeroNotaFiscal: 'carga.numeroNotaFiscal',
+      tipoOperacao: 'carga.tipoOperacao',
+    };
+
+    const selects = campos
+      .filter((campo) => camposPermitidos[campo])
+      .map((campo) => `${camposPermitidos[campo]} AS "${campo}"`);
+
+    console.log('selects:', selects);
+
+    if (selects.length > 0) {
+      query.select(selects);
+    }
+
+    // FILTRO POR ID
+    if (filtro.id) {
+      query.andWhere('carga.id = :id', { id: filtro.id });
+    }
+
+    // FILTRO POR EMPRESA
+    if (filtro.empresa) {
+      query.andWhere('empresa.nome ILIKE :empresa', {
+        empresa: `%${filtro.empresa}%`,
+      });
+    }
+
+    // FILTRO POR NOTA FISCAL
+    if (filtro.numeroNotaFiscal) {
+      query.andWhere('carga.numeroNotaFiscal ILIKE :nf', {
+        nf: `%${filtro.numeroNotaFiscal}%`,
+      });
+    }
+
+    // FILTRO POR RG/CPF
+    if (filtro.rgCpf) {
+      query.andWhere('motorista.rgCpf ILIKE :rgCpf', {
+        rgCpf: `%${filtro.rgCpf}%`,
+      });
+    }
+
+    // FILTRO POR TIPO OPERAÇÃO
+    if (filtro.tipoOperacao !== undefined && filtro.tipoOperacao !== 0) {
+      query.andWhere('carga.tipoOperacao = :tipo', {
+        tipo: filtro.tipoOperacao,
+      });
+    }
+
+    // FILTRO POR DATA + HORÁRIO
+    if (filtro.dataInicial || filtro.dataFinal) {
+      const inicio = filtro.dataInicial
+        ? `${filtro.dataInicial} 00:00:00`
+        : '1900-01-01 00:00:00';
+
+      const fim = filtro.dataFinal
+        ? `${filtro.dataFinal} 23:59:59`
+        : '2999-12-31 23:59:59';
+
+      query.andWhere('carga.chegada BETWEEN :inicio AND :fim', { inicio, fim });
+    }
+
+    console.log(query.getSql());
+    return query.getRawMany();
   }
 
   async create(createCargasDto: CreateCargasDto) {

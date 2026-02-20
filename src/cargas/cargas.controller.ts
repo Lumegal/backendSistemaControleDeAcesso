@@ -8,11 +8,14 @@ import {
   Delete,
   UploadedFile,
   UseInterceptors,
+  Res,
 } from '@nestjs/common';
+import express from 'express';
 import { CargasService } from './cargas.service';
 import { CreateCargasDto } from './dto/create-cargas.dto';
 import { UpdateCargasDto } from './dto/update-cargas.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { FiltroCargasDto } from './dto/filtro-cargas.dto';
 
 @Controller('cargas')
 export class CargasController {
@@ -51,5 +54,14 @@ export class CargasController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cargasService.remove(+id);
+  }
+
+  @Post('filtrar')
+  async filtrar(@Body() body: any) {
+    return this.cargasService.filtrar(
+      body.filtros,
+      body.campos,
+      body.tipoExport,
+    );
   }
 }
