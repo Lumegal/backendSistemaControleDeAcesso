@@ -12,6 +12,10 @@ async function bootstrap() {
       stopAtFirstError: true, // retorna apenas o primeiro erro que ocorrer
     }),
   );
-  await app.listen(3001, '0.0.0.0');
+
+  const PORT = 3001
+  await app.listen(PORT, '0.0.0.0');
+  const url = await app.getUrl();
+  console.log(`Controle de Acesso rodando em: ${url}`);
 }
 bootstrap();
